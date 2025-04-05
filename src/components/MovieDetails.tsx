@@ -1,9 +1,8 @@
-
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { MovieDetails as MovieDetailsType, fetchMovieDetails, IMAGE_SIZES } from "@/services/api";
-import { Clock, Calendar, Star, DollarSign, Award, X, Share2, Compare } from "lucide-react";
+import { Clock, Calendar, Star, DollarSign, Award, X, Share2, GitCompare } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import MovieReview, { ReviewsList } from "./MovieReview";
 import { toast } from "sonner";
@@ -112,7 +111,7 @@ const MovieDetails = ({ movieId, isOpen, onClose, onCompareClick }: MovieDetails
                     className="h-8 w-8 p-0 text-gray-400 hover:text-white"
                     onClick={() => onCompareClick(movie)}
                   >
-                    <Compare size={18} />
+                    <GitCompare size={18} />
                   </Button>
                 )}
               </>

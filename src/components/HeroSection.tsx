@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { Movie, IMAGE_SIZES } from "@/services/api";
-import { Play, Info, Calendar, Star, Compare } from "lucide-react";
+import { Play, Info, Calendar, Star, GitCompare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeroSectionProps {
@@ -98,7 +97,7 @@ const HeroSection = ({ movie, onDetailsClick, onCompareClick }: HeroSectionProps
                   onClick={() => onCompareClick(movie)}
                   className="border-white/20 bg-white/10 hover:bg-white/20 text-white flex items-center gap-2"
                 >
-                  <Compare size={16} />
+                  <GitCompare size={16} />
                   <span>Compare</span>
                 </Button>
               )}

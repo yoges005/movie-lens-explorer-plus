@@ -7,9 +7,10 @@ import { useToast } from "@/components/ui/use-toast";
 
 interface HeaderProps {
   onSearch: (query: string) => void;
+  actions?: { icon: React.ReactNode; label: string; onClick: () => void; }[];
 }
 
-const Header = ({ onSearch }: HeaderProps) => {
+const Header = ({ onSearch, actions = [] }: HeaderProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
@@ -72,6 +73,24 @@ const Header = ({ onSearch }: HeaderProps) => {
               </button>
             </nav>
 
+            {/* Action buttons */}
+            {actions.length > 0 && (
+              <div className="flex items-center space-x-3">
+                {actions.map((action, index) => (
+                  <Button
+                    key={index}
+                    variant="ghost"
+                    size="icon"
+                    onClick={action.onClick}
+                    title={action.label}
+                    className="h-8 w-8 rounded-full bg-movieLens-gray/50 hover:bg-movieLens-gray"
+                  >
+                    {action.icon}
+                  </Button>
+                ))}
+              </div>
+            )}
+
             {/* Search Form */}
             <form onSubmit={handleSearch} className="relative w-64">
               <input
@@ -124,6 +143,23 @@ const Header = ({ onSearch }: HeaderProps) => {
                 <Search size={18} />
               </button>
             </form>
+
+            {/* Mobile action buttons */}
+            {actions.length > 0 && (
+              <div className="grid grid-cols-4 gap-2 mb-4">
+                {actions.map((action, index) => (
+                  <Button
+                    key={index}
+                    variant="ghost"
+                    onClick={action.onClick}
+                    className="flex flex-col items-center justify-center py-2 h-auto gap-1 bg-movieLens-gray/20 hover:bg-movieLens-gray/40"
+                  >
+                    {action.icon}
+                    <span className="text-xs">{action.label}</span>
+                  </Button>
+                ))}
+              </div>
+            )}
 
             <nav className="flex flex-col space-y-3">
               <button 

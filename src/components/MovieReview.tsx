@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Star, Image as ImageIcon, Send } from "lucide-react";
+import { Star, Image as ImageIcon, Send, X } from "lucide-react";
 import { toast } from "sonner";
 import { saveUserReview, getMovieReviews, Movie, UserReview } from "@/services/api";
 import { useUser } from "@/contexts/UserContext";

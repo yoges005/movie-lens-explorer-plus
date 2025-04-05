@@ -18,8 +18,8 @@ import {
   Share2,
   Users,
   Film,
-  Compare,
-  Category 
+  GitCompare,
+  Tags 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner"; 
