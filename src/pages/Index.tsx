@@ -6,6 +6,7 @@ import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import MovieGrid from "@/components/MovieGrid";
 import MovieDetails from "@/components/MovieDetails";
+import MovieCard from "@/components/MovieCard"; // Add this import
 import { 
   Movie, 
   fetchPopularMovies, 
