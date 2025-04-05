@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Movie, IMAGE_SIZES } from "@/services/api";
 import { Play, Info, Calendar, Star, GitCompare } from "lucide-react";
@@ -30,6 +31,10 @@ const HeroSection = ({ movie, onDetailsClick, onCompareClick }: HeroSectionProps
       month: "long",
       day: "numeric",
     }).format(date);
+  };
+
+  const handleTrailerClick = () => {
+    onDetailsClick(movie);
   };
 
   return (
@@ -75,7 +80,7 @@ const HeroSection = ({ movie, onDetailsClick, onCompareClick }: HeroSectionProps
             
             <div className="flex flex-wrap gap-4">
               <Button 
-                onClick={() => onDetailsClick(movie)}
+                onClick={handleTrailerClick}
                 className="bg-movieLens-red hover:bg-red-700 text-white flex items-center gap-2"
               >
                 <Play size={16} />

@@ -1,8 +1,9 @@
+
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { MovieDetails as MovieDetailsType, fetchMovieDetails, IMAGE_SIZES } from "@/services/api";
-import { Clock, Calendar, Star, DollarSign, Award, X, Share2, GitCompare } from "lucide-react";
+import { MovieDetails as MovieDetailsType, fetchMovieDetails, fetchMovieTrailers, IMAGE_SIZES } from "@/services/api";
+import { Clock, Calendar, Star, DollarSign, Award, X, Share2, GitCompare, Youtube } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import MovieReview, { ReviewsList } from "./MovieReview";
 import { toast } from "sonner";
@@ -18,6 +19,8 @@ const MovieDetails = ({ movieId, isOpen, onClose, onCompareClick }: MovieDetails
   const [movie, setMovie] = useState<MovieDetailsType | null>(null);
   const [loading, setLoading] = useState(false);
   const [reviewMode, setReviewMode] = useState<"view" | "add">("view");
+  const [trailerKey, setTrailerKey] = useState<string | null>(null);
+  const [showTrailer, setShowTrailer] = useState(false);
   const { toast: uiToast } = useToast();
 
   useEffect(() => {
@@ -28,6 +31,10 @@ const MovieDetails = ({ movieId, isOpen, onClose, onCompareClick }: MovieDetails
       try {
         const details = await fetchMovieDetails(movieId);
         setMovie(details);
+        
+        // Fetch trailer
+        const trailerKey = await fetchMovieTrailers(movieId);
+        setTrailerKey(trailerKey);
       } catch (error) {
         console.error("Error loading movie details:", error);
         uiToast({
@@ -42,6 +49,7 @@ const MovieDetails = ({ movieId, isOpen, onClose, onCompareClick }: MovieDetails
 
     if (isOpen && movieId) {
       loadMovieDetails();
+      setShowTrailer(false); // Reset trailer state when dialog opens
     }
   }, [movieId, isOpen, uiToast]);
 
@@ -62,10 +70,11 @@ const MovieDetails = ({ movieId, isOpen, onClose, onCompareClick }: MovieDetails
   };
 
   const handlePlayTrailer = () => {
-    uiToast({
-      title: "Coming Soon",
-      description: "Trailer playback will be available in a future update!",
-    });
+    if (trailerKey) {
+      setShowTrailer(true);
+    } else {
+      toast.error("No trailer available for this movie");
+    }
   };
   
   const handleShare = () => {
@@ -133,25 +142,48 @@ const MovieDetails = ({ movieId, isOpen, onClose, onCompareClick }: MovieDetails
           </div>
         ) : movie ? (
           <div className="space-y-6">
-            {/* Backdrop Image */}
-            {movie.backdrop_path && (
+            {/* YouTube Trailer */}
+            {showTrailer && trailerKey ? (
               <div className="relative w-full h-[300px] overflow-hidden rounded-lg">
-                <img
-                  src={`${IMAGE_SIZES.backdrop.large}${movie.backdrop_path}`}
-                  alt={movie.title}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-center">
+                <div className="absolute top-2 right-2 z-10">
                   <Button 
-                    onClick={handlePlayTrailer}
-                    className="bg-movieLens-red hover:bg-red-700 text-white rounded-full h-16 w-16 flex items-center justify-center"
+                    variant="ghost" 
+                    size="icon" 
+                    className="bg-black/50 text-white hover:bg-black/80"
+                    onClick={() => setShowTrailer(false)}
                   >
-                    <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                    </svg>
+                    <X size={20} />
                   </Button>
                 </div>
+                <iframe
+                  className="w-full h-full"
+                  src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1`}
+                  title={`${movie.title} Trailer`}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
               </div>
+            ) : (
+              /* Backdrop Image */
+              movie.backdrop_path && (
+                <div className="relative w-full h-[300px] overflow-hidden rounded-lg">
+                  <img
+                    src={`${IMAGE_SIZES.backdrop.large}${movie.backdrop_path}`}
+                    alt={movie.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-center">
+                    <Button 
+                      onClick={handlePlayTrailer}
+                      className="bg-movieLens-red hover:bg-red-700 text-white rounded-full h-16 w-16 flex items-center justify-center"
+                    >
+                      <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                      </svg>
+                    </Button>
+                  </div>
+                </div>
+              )
             )}
 
             {/* Movie Info */}

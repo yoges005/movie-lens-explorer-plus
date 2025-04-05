@@ -1,7 +1,7 @@
 import { toast } from "sonner";
 
 // Movie API base URL
-const API_KEY = "api_key=2dca580c2a14b55200e784d157207b4d";
+const API_KEY = "2dca580c2a14b55200e784d157207b4d";
 const BASE_URL = "https://api.themoviedb.org/3";
 const IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
 
@@ -251,7 +251,27 @@ export const searchActors = async (query: string, page = 1): Promise<Actor[]> =>
   }
 };
 
-// Mock functions for storing user data (to be replaced with a proper backend later)
+// Function to fetch movie trailers
+export const fetchMovieTrailers = async (movieId: number): Promise<string | null> => {
+  try {
+    const response = await fetch(`${BASE_URL}/movie/${movieId}/videos?${API_KEY}&language=en-US`);
+    if (!response.ok) throw new Error("Failed to fetch movie trailers");
+    
+    const data = await response.json();
+    const trailers = data.results.filter(
+      (video: any) => video.type === "Trailer" && video.site === "YouTube"
+    );
+    
+    // Return the key of the first trailer, or null if no trailers are found
+    return trailers.length > 0 ? trailers[0].key : null;
+  } catch (error) {
+    console.error(`Error fetching trailers for movie ${movieId}:`, error);
+    toast.error("Failed to load movie trailer");
+    return null;
+  }
+};
+
+// Mock functions for storing user data
 const STORAGE_KEY_REVIEWS = "movieLens_reviews";
 const STORAGE_KEY_USER = "movieLens_user";
 
