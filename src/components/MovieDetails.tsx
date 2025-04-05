@@ -3,19 +3,23 @@ import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { MovieDetails as MovieDetailsType, fetchMovieDetails, IMAGE_SIZES } from "@/services/api";
-import { Clock, Calendar, Star, DollarSign, Award, X } from "lucide-react";
+import { Clock, Calendar, Star, DollarSign, Award, X, Share2, Compare } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import MovieReview, { ReviewsList } from "./MovieReview";
+import { toast } from "sonner";
 
 interface MovieDetailsProps {
   movieId: number | null;
   isOpen: boolean;
   onClose: () => void;
+  onCompareClick?: (movie: MovieDetailsType) => void;
 }
 
-const MovieDetails = ({ movieId, isOpen, onClose }: MovieDetailsProps) => {
+const MovieDetails = ({ movieId, isOpen, onClose, onCompareClick }: MovieDetailsProps) => {
   const [movie, setMovie] = useState<MovieDetailsType | null>(null);
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
+  const [reviewMode, setReviewMode] = useState<"view" | "add">("view");
+  const { toast: uiToast } = useToast();
 
   useEffect(() => {
     const loadMovieDetails = async () => {
@@ -27,7 +31,7 @@ const MovieDetails = ({ movieId, isOpen, onClose }: MovieDetailsProps) => {
         setMovie(details);
       } catch (error) {
         console.error("Error loading movie details:", error);
-        toast({
+        uiToast({
           title: "Error",
           description: "Failed to load movie details. Please try again.",
           variant: "destructive",
@@ -40,7 +44,7 @@ const MovieDetails = ({ movieId, isOpen, onClose }: MovieDetailsProps) => {
     if (isOpen && movieId) {
       loadMovieDetails();
     }
-  }, [movieId, isOpen, toast]);
+  }, [movieId, isOpen, uiToast]);
 
   const formatCurrency = (amount: number) => {
     if (!amount) return "N/A";
@@ -59,10 +63,29 @@ const MovieDetails = ({ movieId, isOpen, onClose }: MovieDetailsProps) => {
   };
 
   const handlePlayTrailer = () => {
-    toast({
+    uiToast({
       title: "Coming Soon",
       description: "Trailer playback will be available in a future update!",
     });
+  };
+  
+  const handleShare = () => {
+    if (navigator.share && movie) {
+      navigator.share({
+        title: movie.title,
+        text: `Check out ${movie.title} on MovieLens!`,
+        url: window.location.href,
+      }).catch(error => {
+        console.error('Error sharing:', error);
+      });
+    } else {
+      toast.success('Link copied to clipboard!');
+      navigator.clipboard.writeText(window.location.href);
+    }
+  };
+  
+  const handleReviewAdded = () => {
+    setReviewMode("view");
   };
 
   return (
@@ -70,13 +93,39 @@ const MovieDetails = ({ movieId, isOpen, onClose }: MovieDetailsProps) => {
       <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto bg-movieLens-gray text-white border-none">
         <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle className="text-2xl">{loading ? "Loading..." : movie?.title}</DialogTitle>
-          <Button
-            variant="ghost"
-            className="h-8 w-8 p-0 text-gray-400 hover:text-white"
-            onClick={onClose}
-          >
-            <X size={20} />
-          </Button>
+          <div className="flex items-center gap-2">
+            {movie && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 p-0 text-gray-400 hover:text-white"
+                  onClick={handleShare}
+                >
+                  <Share2 size={18} />
+                </Button>
+                
+                {onCompareClick && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 p-0 text-gray-400 hover:text-white"
+                    onClick={() => onCompareClick(movie)}
+                  >
+                    <Compare size={18} />
+                  </Button>
+                )}
+              </>
+            )}
+            
+            <Button
+              variant="ghost"
+              className="h-8 w-8 p-0 text-gray-400 hover:text-white"
+              onClick={onClose}
+            >
+              <X size={20} />
+            </Button>
+          </div>
         </DialogHeader>
 
         {loading ? (
@@ -212,6 +261,37 @@ const MovieDetails = ({ movieId, isOpen, onClose }: MovieDetailsProps) => {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div className="pt-6 border-t border-gray-700">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Reviews</h3>
+                <div className="flex gap-2">
+                  <Button 
+                    variant={reviewMode === "view" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setReviewMode("view")}
+                    className={reviewMode === "view" ? "bg-movieLens-blue" : "border-gray-600"}
+                  >
+                    View Reviews
+                  </Button>
+                  <Button 
+                    variant={reviewMode === "add" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setReviewMode("add")}
+                    className={reviewMode === "add" ? "bg-movieLens-blue" : "border-gray-600"}
+                  >
+                    Write Review
+                  </Button>
+                </div>
+              </div>
+              
+              {reviewMode === "add" ? (
+                <MovieReview movie={movie} onReviewAdded={handleReviewAdded} />
+              ) : (
+                <ReviewsList movieId={movie.id} />
+              )}
             </div>
 
             {/* Similar Movies */}

@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // Movie API base URL
@@ -29,6 +28,20 @@ export const IMAGE_SIZES = {
 };
 
 // Types
+export type Language = "English" | "Tamil" | "Korean" | "Spanish" | "French" | "Japanese" | "Other";
+export type Mood = "Funny" | "Heart-breaking" | "Thrilling" | "Romantic" | "Action-packed" | "Suspenseful" | "Inspirational";
+
+export interface UserReview {
+  id: string;
+  userId: string;
+  userName: string;
+  userPhotoUrl?: string;
+  rating: number;
+  review: string;
+  photoUrl?: string;
+  createdAt: string;
+}
+
 export interface Movie {
   id: number;
   title: string;
@@ -39,6 +52,10 @@ export interface Movie {
   vote_average: number;
   genre_ids: number[];
   original_language: string;
+  language?: Language;
+  userReviews?: UserReview[];
+  mood?: Mood[];
+  category?: string[];
 }
 
 export interface MovieDetails extends Movie {
@@ -71,6 +88,21 @@ export interface MovieDetails extends Movie {
 export interface Genre {
   id: number;
   name: string;
+}
+
+export interface Actor {
+  id: number;
+  name: string;
+  profile_path: string;
+  known_for_department: string;
+  popularity: number;
+}
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  photoURL?: string;
 }
 
 // Fetch functions
@@ -165,6 +197,32 @@ export const fetchMoviesByGenre = async (genreId: number, page = 1): Promise<Mov
   }
 };
 
+export const fetchMoviesByLanguage = async (language: string, page = 1): Promise<Movie[]> => {
+  try {
+    const response = await fetch(`${BASE_URL}/discover/movie?${API_KEY}&with_original_language=${language}&page=${page}&language=en-US`);
+    if (!response.ok) throw new Error(`Failed to fetch ${language} movies`);
+    const data = await response.json();
+    return data.results as Movie[];
+  } catch (error) {
+    console.error(`Error fetching ${language} movies:`, error);
+    toast.error(`Failed to load ${language} movies`);
+    return [];
+  }
+};
+
+export const fetchMoviesByActor = async (actorId: number, page = 1): Promise<Movie[]> => {
+  try {
+    const response = await fetch(`${BASE_URL}/discover/movie?${API_KEY}&with_cast=${actorId}&page=${page}&language=en-US`);
+    if (!response.ok) throw new Error(`Failed to fetch movies by actor`);
+    const data = await response.json();
+    return data.results as Movie[];
+  } catch (error) {
+    console.error(`Error fetching movies by actor:`, error);
+    toast.error(`Failed to load movies for this actor`);
+    return [];
+  }
+};
+
 export const searchMovies = async (query: string, page = 1): Promise<Movie[]> => {
   try {
     if (!query.trim()) return [];
@@ -177,4 +235,61 @@ export const searchMovies = async (query: string, page = 1): Promise<Movie[]> =>
     toast.error("Failed to search movies");
     return [];
   }
+};
+
+export const searchActors = async (query: string, page = 1): Promise<Actor[]> => {
+  try {
+    if (!query.trim()) return [];
+    const response = await fetch(`${BASE_URL}/search/person?${API_KEY}&query=${encodeURIComponent(query)}&page=${page}&language=en-US`);
+    if (!response.ok) throw new Error("Failed to search actors");
+    const data = await response.json();
+    return data.results as Actor[];
+  } catch (error) {
+    console.error("Error searching actors:", error);
+    toast.error("Failed to search actors");
+    return [];
+  }
+};
+
+// Mock functions for storing user data (to be replaced with a proper backend later)
+const STORAGE_KEY_REVIEWS = "movieLens_reviews";
+const STORAGE_KEY_USER = "movieLens_user";
+
+export const saveUserReview = (movieId: number, review: Omit<UserReview, "id" | "createdAt">): UserReview => {
+  const storedReviews = localStorage.getItem(STORAGE_KEY_REVIEWS);
+  const reviews: Record<number, UserReview[]> = storedReviews ? JSON.parse(storedReviews) : {};
+  
+  const newReview: UserReview = {
+    ...review,
+    id: Date.now().toString(),
+    createdAt: new Date().toISOString(),
+  };
+  
+  if (!reviews[movieId]) {
+    reviews[movieId] = [];
+  }
+  
+  reviews[movieId].push(newReview);
+  localStorage.setItem(STORAGE_KEY_REVIEWS, JSON.stringify(reviews));
+  
+  return newReview;
+};
+
+export const getMovieReviews = (movieId: number): UserReview[] => {
+  const storedReviews = localStorage.getItem(STORAGE_KEY_REVIEWS);
+  if (!storedReviews) return [];
+  
+  const reviews: Record<number, UserReview[]> = JSON.parse(storedReviews);
+  return reviews[movieId] || [];
+};
+
+export const saveUserProfile = (user: User): void => {
+  localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(user));
+};
+
+export const getUserProfile = (): User | null => {
+  const storedUser = localStorage.getItem(STORAGE_KEY_USER);
+  if (!storedUser) return null;
+  
+  return JSON.parse(storedUser);
 };

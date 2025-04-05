@@ -1,15 +1,16 @@
 
 import { useState, useEffect } from "react";
 import { Movie, IMAGE_SIZES } from "@/services/api";
-import { Play, Info, Calendar, Clock, Star } from "lucide-react";
+import { Play, Info, Calendar, Star, Compare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface HeroSectionProps {
   movie: Movie;
   onDetailsClick: (movie: Movie) => void;
+  onCompareClick?: (movie: Movie) => void;
 }
 
-const HeroSection = ({ movie, onDetailsClick }: HeroSectionProps) => {
+const HeroSection = ({ movie, onDetailsClick, onCompareClick }: HeroSectionProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
 
   useEffect(() => {
@@ -58,7 +59,7 @@ const HeroSection = ({ movie, onDetailsClick }: HeroSectionProps) => {
       <div className="absolute inset-0 flex items-end md:items-center p-6 md:p-16">
         <div className="container mx-auto">
           <div className="max-w-2xl">
-            <h1 className="text-3xl md:text-5xl font-bold text-white mb-3">{movie.title}</h1>
+            <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 movie-title">{movie.title}</h1>
             
             <div className="flex flex-wrap items-center gap-3 mb-4 text-sm text-gray-300">
               <div className="flex items-center gap-1">
@@ -90,6 +91,17 @@ const HeroSection = ({ movie, onDetailsClick }: HeroSectionProps) => {
                 <Info size={16} />
                 <span>More Info</span>
               </Button>
+              
+              {onCompareClick && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => onCompareClick(movie)}
+                  className="border-white/20 bg-white/10 hover:bg-white/20 text-white flex items-center gap-2"
+                >
+                  <Compare size={16} />
+                  <span>Compare</span>
+                </Button>
+              )}
             </div>
           </div>
         </div>
