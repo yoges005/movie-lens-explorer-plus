@@ -91,16 +91,25 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-muted p-4">
+    <div 
+      className="min-h-screen flex flex-col items-center justify-center p-4"
+      style={{
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), 
+                          url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2225&auto=format&fit=crop')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
       <div className="mb-8 flex flex-col items-center">
         <div className="flex items-center gap-2 mb-2">
           <Film className="h-10 w-10 text-primary" />
-          <h1 className="text-3xl font-bold text-primary">MovieLens</h1>
+          <h1 className="text-3xl font-bold text-primary movie-title">MovieLens</h1>
         </div>
         <p className="text-muted-foreground text-center">Your ultimate movie discovery platform</p>
       </div>
 
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md bg-black/70 backdrop-blur-sm border-white/10">
         <CardHeader>
           <CardTitle className="text-center">Welcome to MovieLens</CardTitle>
           <CardDescription className="text-center">
