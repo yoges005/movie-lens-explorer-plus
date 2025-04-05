@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -58,14 +57,13 @@ const Index = () => {
     const loadInitialData = async () => {
       setIsLoading(true);
       try {
-        // Load data in parallel
         const [popularData, topRatedData, upcomingData, nowPlayingData, tamilData, koreanData] = await Promise.all([
           fetchPopularMovies(),
           fetchTopRatedMovies(),
           fetchUpcomingMovies(),
           fetchNowPlayingMovies(),
-          fetchMoviesByLanguage('ta'), // Tamil
-          fetchMoviesByLanguage('ko')  // Korean
+          fetchMoviesByLanguage('ta'),
+          fetchMoviesByLanguage('ko')
         ]);
         
         setPopularMovies(popularData);
@@ -74,9 +72,7 @@ const Index = () => {
         setTamilMovies(tamilData);
         setKoreanMovies(koreanData);
         
-        // Set a featured movie from now playing
         if (nowPlayingData.length > 0) {
-          // Get a random movie for the hero section
           const randomIndex = Math.floor(Math.random() * Math.min(5, nowPlayingData.length));
           setFeaturedMovie(nowPlayingData[randomIndex]);
         }
@@ -178,7 +174,7 @@ const Index = () => {
             onClick: () => setIsActorMoviesOpen(true)
           },
           {
-            icon: <Compare size={20} />,
+            icon: <GitCompare size={20} />,
             label: "Compare Movies",
             onClick: () => setIsCompareMoviesOpen(true)
           },
@@ -193,7 +189,6 @@ const Index = () => {
       <main className="flex-1 pt-16">
         {!isSearching ? (
           <>
-            {/* Hero Section */}
             {featuredMovie && (
               <HeroSection 
                 movie={featuredMovie} 
@@ -203,7 +198,6 @@ const Index = () => {
             )}
             
             <div className="container mx-auto px-4 py-8">
-              {/* Popular Movies */}
               <div className="mb-10">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl md:text-2xl font-semibold text-white">Popular Movies</h2>
@@ -235,7 +229,6 @@ const Index = () => {
                 </div>
               </div>
               
-              {/* Top Rated Movies */}
               <div className="mb-10">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl md:text-2xl font-semibold text-white">Top Rated</h2>
@@ -267,7 +260,6 @@ const Index = () => {
                 </div>
               </div>
               
-              {/* Upcoming Movies */}
               <div className="mb-10">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl md:text-2xl font-semibold text-white">Coming Soon</h2>
@@ -299,7 +291,6 @@ const Index = () => {
                 </div>
               </div>
               
-              {/* Tamil Movies */}
               <div className="mb-10">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl md:text-2xl font-semibold text-white">Tamil Movies</h2>
@@ -331,7 +322,6 @@ const Index = () => {
                 </div>
               </div>
               
-              {/* Korean Movies */}
               <div className="mb-10">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl md:text-2xl font-semibold text-white">Korean Movies</h2>
