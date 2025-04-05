@@ -1,195 +1,187 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search, Menu, X } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
+import { Film, Search, MenuIcon, X, LogOut } from "lucide-react";
+import { useUser } from "@/contexts/UserContext";
 
-interface HeaderProps {
-  onSearch: (query: string) => void;
-  actions?: { icon: React.ReactNode; label: string; onClick: () => void; }[];
-}
+type HeaderAction = {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+};
+
+type HeaderProps = {
+  onSearch?: (query: string) => void;
+  actions?: HeaderAction[];
+};
 
 const Header = ({ onSearch, actions = [] }: HeaderProps) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const { isAuthenticated, logout } = useUser();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
+  // Add logout action to the actions array if user is authenticated
+  const allActions = useMemo(() => {
+    if (isAuthenticated) {
+      return [
+        ...actions,
+        {
+          icon: <LogOut size={20} />,
+          label: "Logout",
+          onClick: () => {
+            logout();
+            navigate('/auth');
+          }
+        }
+      ];
+    }
+    return actions;
+  }, [actions, isAuthenticated, logout, navigate]);
+
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (onSearch && searchQuery.trim()) {
       onSearch(searchQuery);
     }
   };
 
-  const navigateTo = (path: string) => {
-    navigate(path);
-    setMobileMenuOpen(false);
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
-  const handleSignIn = () => {
-    toast({
-      title: "Sign In Feature",
-      description: "Sign In functionality will be available soon!",
-    });
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleNavigation = (path: string) => {
+    setIsMenuOpen(false);
+    navigate(path);
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-movieLens-dark/90 backdrop-blur-sm">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
+    <header className={`fixed w-full z-50 transition-all duration-300 ${
+      isScrolled ? 'bg-background/95 backdrop-blur supports-backdrop-blur:bg-background/60 shadow-md' : 'bg-transparent'
+    }`}>
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <button 
-            onClick={() => navigate("/")}
-            className="flex items-center"
-          >
-            <h1 className="text-2xl font-bold text-white">
-              <span className="text-movieLens-red">MOVIE</span>
-              <span className="text-movieLens-blue">LENS</span>
-            </h1>
-          </button>
+          <Link to="/" className="flex items-center space-x-2">
+            <Film className="h-6 w-6 text-primary" />
+            <span className="text-xl font-bold text-primary">MovieLens</span>
+          </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
-            <nav className="flex items-center space-x-5 text-sm">
-              <button 
-                onClick={() => navigateTo("/")} 
-                className="text-white hover:text-movieLens-red transition"
-              >
-                Home
-              </button>
-              <button 
-                onClick={() => navigateTo("/movies")} 
-                className="text-white hover:text-movieLens-red transition"
-              >
-                Movies
-              </button>
-              <button 
-                onClick={() => navigateTo("/genres")} 
-                className="text-white hover:text-movieLens-red transition"
-              >
-                Genres
-              </button>
-            </nav>
+          <nav className="hidden md:flex space-x-6">
+            <Link to="/" className="text-gray-300 hover:text-white transition-colors">Home</Link>
+            <Link to="/movies" className="text-gray-300 hover:text-white transition-colors">Movies</Link>
+            <Link to="/genres" className="text-gray-300 hover:text-white transition-colors">Genres</Link>
+          </nav>
 
-            {/* Action buttons */}
-            {actions.length > 0 && (
-              <div className="flex items-center space-x-3">
-                {actions.map((action, index) => (
-                  <Button
-                    key={index}
-                    variant="ghost"
-                    size="icon"
-                    onClick={action.onClick}
-                    title={action.label}
-                    className="h-8 w-8 rounded-full bg-movieLens-gray/50 hover:bg-movieLens-gray"
-                  >
-                    {action.icon}
-                  </Button>
-                ))}
-              </div>
-            )}
-
-            {/* Search Form */}
-            <form onSubmit={handleSearch} className="relative w-64">
-              <input
+          {/* Search Bar */}
+          {onSearch && (
+            <div className="hidden md:flex relative w-1/3 max-w-xs">
+              <Input
                 type="text"
                 placeholder="Search movies..."
+                className="pr-8"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full py-1.5 px-4 pr-10 rounded-full bg-movieLens-gray/50 text-white border border-gray-700 focus:outline-none focus:border-movieLens-red text-sm"
+                onKeyPress={handleKeyPress}
               />
               <button 
-                type="submit" 
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                onClick={() => handleSearch()}
               >
                 <Search size={18} />
               </button>
-            </form>
+            </div>
+          )}
 
-            <Button
-              onClick={handleSignIn}
-              className="bg-movieLens-red hover:bg-red-700 text-white py-1 px-4 rounded-full text-sm"
-            >
-              Sign In
-            </Button>
+          {/* Action Buttons */}
+          <div className="hidden md:flex items-center space-x-4">
+            {allActions.map((action, index) => (
+              <Button
+                key={index}
+                variant="ghost"
+                size="icon"
+                onClick={action.onClick}
+                title={action.label}
+              >
+                {action.icon}
+              </Button>
+            ))}
           </div>
 
           {/* Mobile Menu Button */}
-          <button
-            className="md:hidden text-white p-1.5"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          <button 
+            className="md:hidden text-gray-300 hover:text-white"
+            onClick={toggleMenu}
           >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {isMenuOpen ? <X size={24} /> : <MenuIcon size={24} />}
           </button>
         </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden mt-4 py-4 border-t border-gray-800">
-            <form onSubmit={handleSearch} className="relative mb-4">
-              <input
-                type="text"
-                placeholder="Search movies..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full py-2 px-4 pr-10 rounded-full bg-movieLens-gray/50 text-white border border-gray-700 focus:outline-none focus:border-movieLens-red"
-              />
-              <button 
-                type="submit" 
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-              >
-                <Search size={18} />
-              </button>
-            </form>
-
-            {/* Mobile action buttons */}
-            {actions.length > 0 && (
-              <div className="grid grid-cols-4 gap-2 mb-4">
-                {actions.map((action, index) => (
-                  <Button
-                    key={index}
-                    variant="ghost"
-                    onClick={action.onClick}
-                    className="flex flex-col items-center justify-center py-2 h-auto gap-1 bg-movieLens-gray/20 hover:bg-movieLens-gray/40"
-                  >
-                    {action.icon}
-                    <span className="text-xs">{action.label}</span>
-                  </Button>
-                ))}
-              </div>
-            )}
-
-            <nav className="flex flex-col space-y-3">
-              <button 
-                onClick={() => navigateTo("/")} 
-                className="text-white hover:text-movieLens-red py-2 transition"
-              >
-                Home
-              </button>
-              <button 
-                onClick={() => navigateTo("/movies")} 
-                className="text-white hover:text-movieLens-red py-2 transition"
-              >
-                Movies
-              </button>
-              <button 
-                onClick={() => navigateTo("/genres")} 
-                className="text-white hover:text-movieLens-red py-2 transition"
-              >
-                Genres
-              </button>
-              <Button
-                onClick={handleSignIn}
-                className="bg-movieLens-red hover:bg-red-700 text-white w-full py-2 mt-2 rounded-full"
-              >
-                Sign In
-              </Button>
-            </nav>
-          </div>
-        )}
       </div>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden bg-background border-t border-border">
+          <div className="container mx-auto px-4 py-4 space-y-4">
+            {onSearch && (
+              <form onSubmit={handleSearch} className="relative">
+                <Input
+                  type="text"
+                  placeholder="Search movies..."
+                  className="pr-8 w-full"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <button 
+                  type="submit"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  <Search size={18} />
+                </button>
+              </form>
+            )}
+            
+            <nav className="flex flex-col space-y-3">
+              <a onClick={() => handleNavigation('/')} className="text-gray-300 hover:text-white transition-colors cursor-pointer">Home</a>
+              <a onClick={() => handleNavigation('/movies')} className="text-gray-300 hover:text-white transition-colors cursor-pointer">Movies</a>
+              <a onClick={() => handleNavigation('/genres')} className="text-gray-300 hover:text-white transition-colors cursor-pointer">Genres</a>
+            </nav>
+            
+            <div className="flex flex-wrap gap-2">
+              {allActions.map((action, index) => (
+                <Button
+                  key={index}
+                  variant="outline"
+                  size="sm"
+                  onClick={action.onClick}
+                  className="flex items-center space-x-2"
+                >
+                  {action.icon}
+                  <span>{action.label}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 };

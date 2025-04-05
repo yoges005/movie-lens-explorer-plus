@@ -14,6 +14,9 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+// For localStorage key consistency
+const STORAGE_KEY_USER = "movieLens_user";
+
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
@@ -85,6 +88,3 @@ export const useUser = (): UserContextType => {
   }
   return context;
 };
-
-// For localStorage key consistency
-const STORAGE_KEY_USER = "movieLens_user";
