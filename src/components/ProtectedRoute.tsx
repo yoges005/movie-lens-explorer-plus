@@ -1,7 +1,8 @@
 
-import { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { ReactNode, useEffect } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
+import { toast } from "sonner";
 
 type ProtectedRouteProps = {
   children: ReactNode;
@@ -9,9 +10,17 @@ type ProtectedRouteProps = {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { isAuthenticated } = useUser();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast.error("Please sign in to access this page");
+    }
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) {
-    return <Navigate to="/auth" replace />;
+    // Redirect to auth page but remember where the user was trying to go
+    return <Navigate to="/auth" state={{ from: location.pathname }} replace />;
   }
 
   return <>{children}</>;
