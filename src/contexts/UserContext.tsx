@@ -16,6 +16,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // For localStorage key consistency
 const STORAGE_KEY_USER = "movieLens_user";
+const STORAGE_KEY_USERS = "movieLens_users";
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -32,6 +33,11 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const storedTheme = localStorage.getItem("movieLens_theme");
     if (storedTheme && (storedTheme === "dark" || storedTheme === "light")) {
       setTheme(storedTheme);
+    }
+    
+    // Initialize users array if not exists
+    if (!localStorage.getItem(STORAGE_KEY_USERS)) {
+      localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify([]));
     }
   }, []);
   

@@ -18,30 +18,6 @@ type UserCredentials = {
   photoURL?: string;
 };
 
-// Sample user database for demo purposes
-const DEMO_USERS = [
-  {
-    email: "user@example.com",
-    password: "password123",
-    name: "Demo User",
-    id: "user-1",
-    photoURL: "",
-    favoriteMovies: [],
-    watchlist: [],
-    reviews: []
-  },
-  {
-    email: "admin@example.com",
-    password: "admin123",
-    name: "Admin User",
-    id: "admin-1",
-    photoURL: "",
-    favoriteMovies: [],
-    watchlist: [],
-    reviews: []
-  }
-];
-
 const AuthPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<string>("signin");
@@ -102,6 +78,15 @@ const AuthPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const getUsers = () => {
+    const storedUsers = localStorage.getItem("movieLens_users");
+    return storedUsers ? JSON.parse(storedUsers) : [];
+  };
+
+  const saveUsers = (users: any[]) => {
+    localStorage.setItem("movieLens_users", JSON.stringify(users));
+  };
+
   const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -111,36 +96,41 @@ const AuthPage = () => {
     
     setIsLoading(true);
 
-    // Demo authentication with timeout to simulate API call
-    setTimeout(() => {
-      // Check against our demo users - case-insensitive email comparison
-      const user = DEMO_USERS.find(
-        (user) => 
-          user.email.toLowerCase() === credentials.email.toLowerCase() && 
-          user.password === credentials.password
-      );
+    // Get users from localStorage
+    const users = getUsers();
+    
+    // Find user with matching credentials
+    const user = users.find(
+      (user: any) => 
+        user.email.toLowerCase() === credentials.email.toLowerCase() && 
+        user.password === credentials.password
+    );
+    
+    if (user) {
+      // Remove password before storing in user context
+      const { password, ...userWithoutPassword } = user;
       
-      if (user) {
-        updateUser({
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          photoURL: user.photoURL,
-        });
-        toast.success("Signed in successfully!");
-        
-        // Redirect to the page they were trying to access or to home
-        const from = location.state?.from || "/";
-        navigate(from);
-      } else {
-        // If no matching user is found
-        toast.error("Invalid email or password");
-        setErrors({
-          auth: "Invalid email or password combination"
-        });
-      }
-      setIsLoading(false);
-    }, 1000);
+      updateUser({
+        id: userWithoutPassword.id,
+        email: userWithoutPassword.email,
+        name: userWithoutPassword.name,
+        photoURL: userWithoutPassword.photoURL || "",
+      });
+      
+      toast.success("Signed in successfully!");
+      
+      // Redirect to the page they were trying to access or to home
+      const from = location.state?.from || "/";
+      navigate(from);
+    } else {
+      // If no matching user is found
+      toast.error("Invalid email or password");
+      setErrors({
+        auth: "Invalid email or password combination"
+      });
+    }
+    
+    setIsLoading(false);
   };
 
   const handleSignUp = (e: React.FormEvent) => {
@@ -151,10 +141,13 @@ const AuthPage = () => {
     }
     
     setIsLoading(true);
+    
+    // Get existing users
+    const users = getUsers();
 
     // Check if email already exists
-    const emailExists = DEMO_USERS.some(
-      (user) => user.email.toLowerCase() === credentials.email.toLowerCase()
+    const emailExists = users.some(
+      (user: any) => user.email.toLowerCase() === credentials.email.toLowerCase()
     );
 
     if (emailExists) {
@@ -166,38 +159,31 @@ const AuthPage = () => {
       return;
     }
 
-    // Simulate registration
-    setTimeout(() => {
-      // Create a new user profile
-      const newUserId = "user-" + Date.now();
-      const user = {
-        id: newUserId,
-        email: credentials.email,
-        name: credentials.name || "",
-        photoURL: "",
-        favoriteMovies: [],
-        watchlist: [],
-        reviews: []
-      };
-      
-      // Add new user to DEMO_USERS for future sign-ins within this session
-      DEMO_USERS.push({
-        email: credentials.email,
-        password: credentials.password,
-        name: credentials.name || "",
-        id: newUserId,
-        photoURL: "",
-        favoriteMovies: [],
-        watchlist: [],
-        reviews: []
-      });
-      
-      updateUser(user);
-      toast.success("Account created successfully!");
-      navigate("/");
-      
-      setIsLoading(false);
-    }, 1000);
+    // Create a new user
+    const newUserId = "user-" + Date.now();
+    const newUser = {
+      id: newUserId,
+      email: credentials.email,
+      password: credentials.password, // Store password in users array
+      name: credentials.name || "",
+      photoURL: "",
+      favoriteMovies: [],
+      watchlist: [],
+      reviews: []
+    };
+    
+    // Add new user to users array
+    users.push(newUser);
+    saveUsers(users);
+    
+    // Store user without password in user context
+    const { password, ...userWithoutPassword } = newUser;
+    updateUser(userWithoutPassword);
+    
+    toast.success("Account created successfully!");
+    navigate("/");
+    
+    setIsLoading(false);
   };
 
   const togglePasswordVisibility = () => {
@@ -297,9 +283,6 @@ const AuthPage = () => {
                       </Button>
                     </div>
                     {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Demo: user@example.com / password123
-                    </div>
                   </div>
                   {errors.auth && <p className="text-red-500 text-sm">{errors.auth}</p>}
                   <Button type="submit" className="w-full" disabled={isLoading}>
