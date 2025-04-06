@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +51,10 @@ const AuthPage = () => {
     name: "",
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+  
   const navigate = useNavigate();
+  const location = useLocation();
   const { updateUser, theme, toggleTheme } = useUser();
 
   // Check if user is already logged in
@@ -65,22 +68,52 @@ const AuthPage = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setCredentials((prev) => ({ ...prev, [name]: value }));
+    
+    // Clear errors when user starts typing
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = {...prev};
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {};
+    
+    if (!credentials.email) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(credentials.email)) {
+      newErrors.email = "Please enter a valid email";
+    }
+    
+    if (!credentials.password) {
+      newErrors.password = "Password is required";
+    } else if (credentials.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+    
+    if (activeTab === "signup" && !credentials.name) {
+      newErrors.name = "Name is required";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    // Simple validation
-    if (!credentials.email || !credentials.password) {
-      toast.error("Please enter both email and password");
-      setIsLoading(false);
+    
+    if (!validateForm()) {
       return;
     }
+    
+    setIsLoading(true);
 
     // Demo authentication with timeout to simulate API call
     setTimeout(() => {
-      // Check against our demo users
+      // Check against our demo users - case-insensitive email comparison
       const user = DEMO_USERS.find(
         (user) => 
           user.email.toLowerCase() === credentials.email.toLowerCase() && 
@@ -95,10 +128,16 @@ const AuthPage = () => {
           photoURL: user.photoURL,
         });
         toast.success("Signed in successfully!");
-        navigate("/");
+        
+        // Redirect to the page they were trying to access or to home
+        const from = location.state?.from || "/";
+        navigate(from);
       } else {
         // If no matching user is found
         toast.error("Invalid email or password");
+        setErrors({
+          auth: "Invalid email or password combination"
+        });
       }
       setIsLoading(false);
     }, 1000);
@@ -106,14 +145,12 @@ const AuthPage = () => {
 
   const handleSignUp = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-
-    // Simple validation
-    if (!credentials.email || !credentials.password || !credentials.name) {
-      toast.error("Please fill all required fields");
-      setIsLoading(false);
+    
+    if (!validateForm()) {
       return;
     }
+    
+    setIsLoading(true);
 
     // Check if email already exists
     const emailExists = DEMO_USERS.some(
@@ -122,6 +159,9 @@ const AuthPage = () => {
 
     if (emailExists) {
       toast.error("Email already registered");
+      setErrors({
+        email: "This email is already registered"
+      });
       setIsLoading(false);
       return;
     }
@@ -129,15 +169,28 @@ const AuthPage = () => {
     // Simulate registration
     setTimeout(() => {
       // Create a new user profile
+      const newUserId = "user-" + Date.now();
       const user = {
-        id: "user-" + Date.now(),
+        id: newUserId,
         email: credentials.email,
-        name: credentials.name,
+        name: credentials.name || "",
         photoURL: "",
         favoriteMovies: [],
         watchlist: [],
         reviews: []
       };
+      
+      // Add new user to DEMO_USERS for future sign-ins within this session
+      DEMO_USERS.push({
+        email: credentials.email,
+        password: credentials.password,
+        name: credentials.name || "",
+        id: newUserId,
+        photoURL: "",
+        favoriteMovies: [],
+        watchlist: [],
+        reviews: []
+      });
       
       updateUser(user);
       toast.success("Account created successfully!");
@@ -210,8 +263,12 @@ const AuthPage = () => {
                       value={credentials.email}
                       onChange={handleInputChange}
                       required
-                      className={theme === "light" ? "bg-white border-gray-300" : ""}
+                      className={cn(
+                        theme === "light" ? "bg-white border-gray-300" : "",
+                        errors.email ? "border-red-500" : ""
+                      )}
                     />
+                    {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signin-password">Password</Label>
@@ -224,7 +281,10 @@ const AuthPage = () => {
                         value={credentials.password}
                         onChange={handleInputChange}
                         required
-                        className={theme === "light" ? "bg-white border-gray-300 pr-10" : "pr-10"}
+                        className={cn(
+                          theme === "light" ? "bg-white border-gray-300 pr-10" : "pr-10",
+                          errors.password ? "border-red-500" : ""
+                        )}
                       />
                       <Button
                         type="button"
@@ -236,10 +296,12 @@ const AuthPage = () => {
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </Button>
                     </div>
+                    {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
                     <div className="text-xs text-muted-foreground mt-1">
                       Demo: user@example.com / password123
                     </div>
                   </div>
+                  {errors.auth && <p className="text-red-500 text-sm">{errors.auth}</p>}
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
@@ -259,8 +321,12 @@ const AuthPage = () => {
                       value={credentials.name}
                       onChange={handleInputChange}
                       required
-                      className={theme === "light" ? "bg-white border-gray-300" : ""}
+                      className={cn(
+                        theme === "light" ? "bg-white border-gray-300" : "",
+                        errors.name ? "border-red-500" : ""
+                      )}
                     />
+                    {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
@@ -272,8 +338,12 @@ const AuthPage = () => {
                       value={credentials.email}
                       onChange={handleInputChange}
                       required
-                      className={theme === "light" ? "bg-white border-gray-300" : ""}
+                      className={cn(
+                        theme === "light" ? "bg-white border-gray-300" : "",
+                        errors.email ? "border-red-500" : ""
+                      )}
                     />
+                    {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
@@ -286,7 +356,10 @@ const AuthPage = () => {
                         value={credentials.password}
                         onChange={handleInputChange}
                         required
-                        className={theme === "light" ? "bg-white border-gray-300 pr-10" : "pr-10"}
+                        className={cn(
+                          theme === "light" ? "bg-white border-gray-300 pr-10" : "pr-10",
+                          errors.password ? "border-red-500" : ""
+                        )}
                       />
                       <Button
                         type="button"
@@ -298,6 +371,7 @@ const AuthPage = () => {
                         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </Button>
                     </div>
+                    {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Creating account..." : "Sign Up"}
