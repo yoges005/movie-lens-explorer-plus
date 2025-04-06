@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 
 // Movie API base URL
@@ -108,7 +109,7 @@ export interface User {
 // Fetch functions
 export const fetchPopularMovies = async (page = 1): Promise<Movie[]> => {
   try {
-    const response = await fetch(`${BASE_URL}/movie/popular?${API_KEY}&page=${page}&language=en-US`);
+    const response = await fetch(`${BASE_URL}/movie/popular?api_key=${API_KEY}&page=${page}&language=en-US`);
     if (!response.ok) throw new Error("Failed to fetch popular movies");
     const data = await response.json();
     return data.results as Movie[];
@@ -121,7 +122,7 @@ export const fetchPopularMovies = async (page = 1): Promise<Movie[]> => {
 
 export const fetchTopRatedMovies = async (page = 1): Promise<Movie[]> => {
   try {
-    const response = await fetch(`${BASE_URL}/movie/top_rated?${API_KEY}&page=${page}&language=en-US`);
+    const response = await fetch(`${BASE_URL}/movie/top_rated?api_key=${API_KEY}&page=${page}&language=en-US`);
     if (!response.ok) throw new Error("Failed to fetch top rated movies");
     const data = await response.json();
     return data.results as Movie[];
@@ -134,7 +135,7 @@ export const fetchTopRatedMovies = async (page = 1): Promise<Movie[]> => {
 
 export const fetchUpcomingMovies = async (page = 1): Promise<Movie[]> => {
   try {
-    const response = await fetch(`${BASE_URL}/movie/upcoming?${API_KEY}&page=${page}&language=en-US`);
+    const response = await fetch(`${BASE_URL}/movie/upcoming?api_key=${API_KEY}&page=${page}&language=en-US`);
     if (!response.ok) throw new Error("Failed to fetch upcoming movies");
     const data = await response.json();
     return data.results as Movie[];
@@ -147,7 +148,7 @@ export const fetchUpcomingMovies = async (page = 1): Promise<Movie[]> => {
 
 export const fetchNowPlayingMovies = async (page = 1): Promise<Movie[]> => {
   try {
-    const response = await fetch(`${BASE_URL}/movie/now_playing?${API_KEY}&page=${page}&language=en-US`);
+    const response = await fetch(`${BASE_URL}/movie/now_playing?api_key=${API_KEY}&page=${page}&language=en-US`);
     if (!response.ok) throw new Error("Failed to fetch now playing movies");
     const data = await response.json();
     return data.results as Movie[];
@@ -160,7 +161,7 @@ export const fetchNowPlayingMovies = async (page = 1): Promise<Movie[]> => {
 
 export const fetchMovieDetails = async (id: number): Promise<MovieDetails | null> => {
   try {
-    const response = await fetch(`${BASE_URL}/movie/${id}?${API_KEY}&append_to_response=credits,similar&language=en-US`);
+    const response = await fetch(`${BASE_URL}/movie/${id}?api_key=${API_KEY}&append_to_response=credits,similar&language=en-US`);
     if (!response.ok) throw new Error("Failed to fetch movie details");
     const data = await response.json();
     return data as MovieDetails;
@@ -173,7 +174,7 @@ export const fetchMovieDetails = async (id: number): Promise<MovieDetails | null
 
 export const fetchGenres = async (): Promise<Genre[]> => {
   try {
-    const response = await fetch(`${BASE_URL}/genre/movie/list?${API_KEY}&language=en-US`);
+    const response = await fetch(`${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=en-US`);
     if (!response.ok) throw new Error("Failed to fetch genres");
     const data = await response.json();
     return data.genres as Genre[];
@@ -186,7 +187,7 @@ export const fetchGenres = async (): Promise<Genre[]> => {
 
 export const fetchMoviesByGenre = async (genreId: number, page = 1): Promise<Movie[]> => {
   try {
-    const response = await fetch(`${BASE_URL}/discover/movie?${API_KEY}&with_genres=${genreId}&page=${page}&language=en-US`);
+    const response = await fetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_genres=${genreId}&page=${page}&language=en-US`);
     if (!response.ok) throw new Error(`Failed to fetch movies for genre ${genreId}`);
     const data = await response.json();
     return data.results as Movie[];
@@ -199,7 +200,7 @@ export const fetchMoviesByGenre = async (genreId: number, page = 1): Promise<Mov
 
 export const fetchMoviesByLanguage = async (language: string, page = 1): Promise<Movie[]> => {
   try {
-    const response = await fetch(`${BASE_URL}/discover/movie?${API_KEY}&with_original_language=${language}&page=${page}&language=en-US`);
+    const response = await fetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_original_language=${language}&page=${page}&language=en-US`);
     if (!response.ok) throw new Error(`Failed to fetch ${language} movies`);
     const data = await response.json();
     return data.results as Movie[];
@@ -212,7 +213,7 @@ export const fetchMoviesByLanguage = async (language: string, page = 1): Promise
 
 export const fetchMoviesByActor = async (actorId: number, page = 1): Promise<Movie[]> => {
   try {
-    const response = await fetch(`${BASE_URL}/discover/movie?${API_KEY}&with_cast=${actorId}&page=${page}&language=en-US`);
+    const response = await fetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&with_cast=${actorId}&page=${page}&language=en-US`);
     if (!response.ok) throw new Error(`Failed to fetch movies by actor`);
     const data = await response.json();
     return data.results as Movie[];
@@ -226,7 +227,7 @@ export const fetchMoviesByActor = async (actorId: number, page = 1): Promise<Mov
 export const searchMovies = async (query: string, page = 1): Promise<Movie[]> => {
   try {
     if (!query.trim()) return [];
-    const response = await fetch(`${BASE_URL}/search/movie?${API_KEY}&query=${encodeURIComponent(query)}&page=${page}&language=en-US`);
+    const response = await fetch(`${BASE_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&page=${page}&language=en-US`);
     if (!response.ok) throw new Error("Failed to search movies");
     const data = await response.json();
     return data.results as Movie[];
@@ -240,7 +241,7 @@ export const searchMovies = async (query: string, page = 1): Promise<Movie[]> =>
 export const searchActors = async (query: string, page = 1): Promise<Actor[]> => {
   try {
     if (!query.trim()) return [];
-    const response = await fetch(`${BASE_URL}/search/person?${API_KEY}&query=${encodeURIComponent(query)}&page=${page}&language=en-US`);
+    const response = await fetch(`${BASE_URL}/search/person?api_key=${API_KEY}&query=${encodeURIComponent(query)}&page=${page}&language=en-US`);
     if (!response.ok) throw new Error("Failed to search actors");
     const data = await response.json();
     return data.results as Actor[];
@@ -254,7 +255,7 @@ export const searchActors = async (query: string, page = 1): Promise<Actor[]> =>
 // Function to fetch movie trailers
 export const fetchMovieTrailers = async (movieId: number): Promise<string | null> => {
   try {
-    const response = await fetch(`${BASE_URL}/movie/${movieId}/videos?${API_KEY}&language=en-US`);
+    const response = await fetch(`${BASE_URL}/movie/${movieId}/videos?api_key=${API_KEY}&language=en-US`);
     if (!response.ok) throw new Error("Failed to fetch movie trailers");
     
     const data = await response.json();

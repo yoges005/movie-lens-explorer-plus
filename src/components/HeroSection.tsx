@@ -1,8 +1,9 @@
 
 import { useState, useEffect } from "react";
-import { Movie, IMAGE_SIZES } from "@/services/api";
+import { Movie, IMAGE_SIZES, fetchMovieTrailers } from "@/services/api";
 import { Play, Info, Calendar, Star, GitCompare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface HeroSectionProps {
   movie: Movie;
@@ -12,6 +13,7 @@ interface HeroSectionProps {
 
 const HeroSection = ({ movie, onDetailsClick, onCompareClick }: HeroSectionProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [isTrailerLoading, setIsTrailerLoading] = useState(false);
 
   useEffect(() => {
     setImageLoaded(false);
@@ -33,8 +35,23 @@ const HeroSection = ({ movie, onDetailsClick, onCompareClick }: HeroSectionProps
     }).format(date);
   };
 
-  const handleTrailerClick = () => {
-    onDetailsClick(movie);
+  const handleTrailerClick = async () => {
+    try {
+      setIsTrailerLoading(true);
+      const trailerKey = await fetchMovieTrailers(movie.id);
+      
+      if (trailerKey) {
+        // Open the movie details with trailer ready to play
+        onDetailsClick(movie);
+      } else {
+        toast.error("No trailer available for this movie");
+      }
+    } catch (error) {
+      console.error("Error fetching trailer:", error);
+      toast.error("Failed to load movie trailer");
+    } finally {
+      setIsTrailerLoading(false);
+    }
   };
 
   return (
@@ -82,9 +99,19 @@ const HeroSection = ({ movie, onDetailsClick, onCompareClick }: HeroSectionProps
               <Button 
                 onClick={handleTrailerClick}
                 className="bg-movieLens-red hover:bg-red-700 text-white flex items-center gap-2"
+                disabled={isTrailerLoading}
               >
-                <Play size={16} />
-                <span>Watch Trailer</span>
+                {isTrailerLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Loading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play size={16} />
+                    <span>Watch Trailer</span>
+                  </>
+                )}
               </Button>
               
               <Button 
